@@ -7,5 +7,5 @@ Node.js project that
 
 ## Why
 
-I wanted to see how true the meme of "Page 17: Chizuru spread" is.
+I wanted to see how true the meme of "Page 16: Chizuru spread" is.
 Also Reiji sucks at writing.
