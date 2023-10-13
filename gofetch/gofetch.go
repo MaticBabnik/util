@@ -3,11 +3,14 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/mackerelio/go-osstat/memory"
-	"github.com/mackerelio/go-osstat/uptime"
 	"os"
 	"os/user"
+	"strconv"
 	"strings"
+	"time"
+
+	"github.com/mackerelio/go-osstat/memory"
+	"github.com/mackerelio/go-osstat/uptime"
 )
 
 func getKernel() (k *string, err error) {
@@ -68,6 +71,25 @@ const (
 	BR_WHITE
 )
 
+var colors = []byte{
+	BLACK,
+	BR_BLACK,
+	RED,
+	BR_RED,
+	GREEN,
+	BR_GREEN,
+	YELLOW,
+	BR_YELLOW,
+	BLUE,
+	BR_BLUE,
+	MAGENTA,
+	BR_MAGENTA,
+	CYAN,
+	BR_CYAN,
+	WHITE,
+	BR_WHITE,
+}
+
 func color(c byte) string {
 	return fmt.Sprintf("\x1b[%dm", c)
 }
@@ -102,6 +124,34 @@ func getHostname() string {
 	return h
 }
 
+func formatUptime(d time.Duration) string {
+	h := int(d.Hours())
+
+	days := h / 24
+
+	h %= 24
+
+	ostr := strings.Builder{}
+
+	if days > 0 {
+		ostr.WriteString(strconv.Itoa(days))
+		ostr.WriteString("d ")
+	}
+
+	if h > 0 {
+		ostr.WriteString(strconv.Itoa(h))
+		ostr.WriteString("h")
+	}
+
+	return ostr.String()
+}
+
+func bar() {
+	for _, col := range colors {
+		print(color(col), "====", color(0))
+	}
+}
+
 func main() {
 	m, e := memory.Get()
 	if e != nil {
@@ -124,12 +174,14 @@ func main() {
 		fmt.Sprintf("%s%s%s@%s%s\n", color(BR_GREEN), getUsername(), color(BR_WHITE), color(BR_BLUE), getHostname()),
 		"\n",
 		fmt.Sprintf("%sCPU: %s%s\n", color(0), color(1), *c),
-		fmt.Sprintf("%sUp:  %s%fh\n", color(0), color(1), u.Hours()),
-		fmt.Sprintf("%sMemory: %s%.2f/%.2fGiB\n", color(0), color(1), float32(m.Active)/GIGABYTE, float32(m.Total)/GIGABYTE),
+		fmt.Sprintf("%sUp:  %s%s\n", color(0), color(1), formatUptime(u)),
+		fmt.Sprintf("%sMemory: %s%.2f/%.2fGiB\n", color(0), color(1), float32(m.Used)/GIGABYTE, float32(m.Total)/GIGABYTE),
 		fmt.Sprintf("%sKernel: %s%s\n", color(0), color(1), *k),
 	}
 	var sz = max(len(linez), len(argh))
-	println("\n")
+
+	bar()
+	print("\n\n")
 
 	print(color(1))
 
@@ -148,6 +200,8 @@ func main() {
 
 	}
 
-	println("\n\n")
+	print("\n\n")
+	bar()
+	print("\n")
 	print("\x1b[39;49m")
 }
